@@ -32,12 +32,11 @@ This guide takes you from zero to a working try-on button in three steps.
 
   <Step title="Initialize the widget">
     Call `VirtualTryOn.init(options)` **once per page load** to configure the widget with
-    your API endpoint and publishable key. Calling `init()` a second time is ignored.
+    your publishable key. Calling `init()` a second time is ignored.
 
     ```html
     <script>
       VirtualTryOn.init({
-        apiBaseUrl: 'https://api.souldi.io',
         tenantApiKey: 'pk_live_abc123',
       });
     </script>
@@ -45,7 +44,6 @@ This guide takes you from zero to a working try-on button in three steps.
 
     | Option | Type | Required | Description |
     |--------|------|:--------:|-------------|
-    | `apiBaseUrl` | `string` | Yes | Your Souldi API endpoint URL. |
     | `tenantApiKey` | `string` | Yes | Your publishable API key from the [Souldi dashboard](#). Safe to expose client-side — it's scoped to your whitelisted domains. |
     | `theme` | `object` | No | Appearance customization. See [Customization](/widget/customization). |
     | `onGenerationStart` | `function` | No | Called when AI generation begins. Signature: `()`. |
@@ -133,7 +131,6 @@ A complete, copy-paste product page with init, a button, and callbacks wired up:
 
     <script>
       VirtualTryOn.init({
-        apiBaseUrl: 'https://api.souldi.io',
         tenantApiKey: 'pk_live_abc123',
         theme: {
           mode: 'light',
