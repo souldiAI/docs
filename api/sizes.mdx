@@ -38,13 +38,13 @@ This endpoint takes no path parameters, query parameters, or body.
 <CodeGroup>
 
 ```bash cURL
-curl https://api.yourdomain.com/user/sizes \
+curl https://api.souldi.io/user/sizes \
   -H "x-api-key: $SOULDI_API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
 ```js fetch
-const res = await fetch("https://api.yourdomain.com/user/sizes", {
+const res = await fetch("https://api.souldi.io/user/sizes", {
   headers: {
     "x-api-key": SOULDI_API_KEY,
     Authorization: `Bearer ${accessToken}`,
@@ -57,7 +57,7 @@ const sizes = await res.json();
 import requests
 
 res = requests.get(
-    "https://api.yourdomain.com/user/sizes",
+    "https://api.souldi.io/user/sizes",
     headers={
         "x-api-key": SOULDI_API_KEY,
         "Authorization": f"Bearer {access_token}",

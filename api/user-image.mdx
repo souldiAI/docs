@@ -59,13 +59,13 @@ This endpoint takes no body and no parameters.
 <CodeGroup>
 
 ```bash cURL
-curl https://api.yourdomain.com/user/profile \
+curl https://api.souldi.io/user/profile \
   -H "x-api-key: $SOULDI_API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
 ```js fetch
-const res = await fetch("https://api.yourdomain.com/user/profile", {
+const res = await fetch("https://api.souldi.io/user/profile", {
   headers: {
     "x-api-key": SOULDI_API_KEY,
     Authorization: `Bearer ${accessToken}`,
@@ -130,7 +130,7 @@ storage, keeping the file off the Souldi API path entirely.
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://api.yourdomain.com/user/profile/upload-url \
+curl -X POST https://api.souldi.io/user/profile/upload-url \
   -H "x-api-key: $SOULDI_API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
@@ -142,7 +142,7 @@ curl -X POST https://api.yourdomain.com/user/profile/upload-url \
 
 ```js fetch
 const res = await fetch(
-  "https://api.yourdomain.com/user/profile/upload-url",
+  "https://api.souldi.io/user/profile/upload-url",
   {
     method: "POST",
     headers: {
@@ -241,7 +241,7 @@ attaches the photo to the user's profile.
 <CodeGroup>
 
 ```bash cURL
-curl -X PATCH https://api.yourdomain.com/user/profile \
+curl -X PATCH https://api.souldi.io/user/profile \
   -H "x-api-key: $SOULDI_API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
@@ -249,7 +249,7 @@ curl -X PATCH https://api.yourdomain.com/user/profile \
 ```
 
 ```js fetch
-const res = await fetch("https://api.yourdomain.com/user/profile", {
+const res = await fetch("https://api.souldi.io/user/profile", {
   method: "PATCH",
   headers: {
     "x-api-key": SOULDI_API_KEY,
@@ -301,19 +301,19 @@ browser — for example, to show their current photo before they generate.
 
 ```bash cURL
 # Original base image
-curl "https://api.yourdomain.com/user/signed_user_image_url" \
+curl "https://api.souldi.io/user/signed_user_image_url" \
   -H "x-api-key: $SOULDI_API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN"
 
 # Background-removed variant
-curl "https://api.yourdomain.com/user/signed_user_image_url?variant=no_bg" \
+curl "https://api.souldi.io/user/signed_user_image_url?variant=no_bg" \
   -H "x-api-key: $SOULDI_API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
 ```js fetch
 const res = await fetch(
-  "https://api.yourdomain.com/user/signed_user_image_url",
+  "https://api.souldi.io/user/signed_user_image_url",
   {
     headers: {
       "x-api-key": SOULDI_API_KEY,
@@ -369,7 +369,7 @@ about **2 minutes**, checking every few seconds:
 async function waitForReady({ intervalMs = 3000, maxWaitMs = 120000 } = {}) {
   const deadline = Date.now() + maxWaitMs;
   while (Date.now() < deadline) {
-    const res = await fetch("https://api.yourdomain.com/user/profile", {
+    const res = await fetch("https://api.souldi.io/user/profile", {
       headers: {
         "x-api-key": SOULDI_API_KEY,
         Authorization: `Bearer ${accessToken}`,
