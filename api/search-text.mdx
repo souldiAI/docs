@@ -1,0 +1,165 @@
+---
+title: "Search by Text"
+description: "Run a natural-language query across your catalog and get back the most relevant garments, ranked by relevance."
+icon: "font"
+---
+
+Type a query the way a shopper would — `red summer dress`, `oversized denim
+jacket` — and get back the garments in your catalog that match it best, ranked by
+[relevance](/api/search#how-relevance-works). Each result is a garment `id` and
+`url` you can pass straight into [Generation](/api/generation).
+
+<Note>
+  This endpoint needs **only your tenant key** — send `x-api-key` and nothing else,
+  with no `Authorization: Bearer` token. `BASE_URL` is your Souldi API base URL.
+  See the [authentication model](/api/overview#authentication-model).
+</Note>
+
+## Search by text
+
+<ParamField path="POST /search/text-search" />
+
+Runs a natural-language search across your catalog and returns the most relevant
+garments, ranked by [`z_score`](/api/search#how-relevance-works).
+
+**Required headers**
+
+| Header | Value |
+| --- | --- |
+| `x-api-key` | Your publishable tenant key |
+| `Content-Type` | `application/json` |
+
+**Query parameter**
+
+<ParamField query="query" type="string" required>
+  The free-text search query, passed in the **URL query string** (not the JSON
+  body). For example `?query=red%20summer%20dress`.
+</ParamField>
+
+**Body parameters**
+
+<ParamField body="top_n" type="integer" default="3">
+  Maximum number of garments to return. Range `1`–`10`.
+</ParamField>
+
+<ParamField body="min_z_score" type="number" default="1.0">
+  Relevance floor in standard deviations above the query's mean. Higher = stricter.
+  Range `-5.0`–`5.0`. See [How relevance works](/api/search#how-relevance-works).
+</ParamField>
+
+<ParamField body="pool_size" type="integer" default="50">
+  Size of the candidate pool that defines the `z_score` baseline. Range `1`–`200`.
+</ParamField>
+
+<ParamField body="garment_ids" type="string[] | null" default="null">
+  Optional allowlist of garment IDs to restrict the search to a specific subset of
+  your catalog. Omit it (or pass `null`) to search your whole catalog.
+</ParamField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST "$BASE_URL/search/text-search?query=red%20summer%20dress" \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "top_n": 3,
+    "min_z_score": 1.0,
+    "pool_size": 50
+  }'
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({ query: "red summer dress" });
+
+const res = await fetch(`${BASE_URL}/search/text-search?${params}`, {
+  method: "POST",
+  headers: {
+    "x-api-key": SOULDI_API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    top_n: 3,
+    min_z_score: 1.0,
+    pool_size: 50,
+  }),
+});
+
+const { garments } = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    f"{BASE_URL}/search/text-search",
+    params={"query": "red summer dress"},
+    headers={"x-api-key": SOULDI_API_KEY},
+    json={"top_n": 3, "min_z_score": 1.0, "pool_size": 50},
+)
+garments = res.json()["garments"]
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "garments": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "url": "https://shop.example.com/garments/red-linen-dress.jpg",
+      "z_score": 2.34
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "url": "https://shop.example.com/garments/coral-sundress.jpg",
+      "z_score": 1.56
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+**Response fields**
+
+<ResponseField name="garments" type="object[]">
+  The matching garments, ordered most-relevant first. May be **empty** if nothing
+  clears `min_z_score`.
+</ResponseField>
+
+<ResponseField name="garments[].id" type="string">
+  The garment's unique ID. Use it to reference the garment elsewhere.
+</ResponseField>
+
+<ResponseField name="garments[].url" type="string">
+  The garment image URL — pass this into
+  [`POST /try-on/generate`](/api/generation#create-a-job) to try it on.
+</ResponseField>
+
+<ResponseField name="garments[].z_score" type="number">
+  The relevance score for this query. See
+  [How relevance works](/api/search#how-relevance-works).
+</ResponseField>
+
+<Tip>
+  Tune the result set with `min_z_score`, `pool_size`, and `top_n` — see
+  [How relevance works](/api/search#how-relevance-works). For the shared status
+  codes and the empty-result case, see [Errors](/api/search#errors).
+</Tip>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Search by attributes" icon="filter" href="/api/search-attributes">
+    Switch to exact faceted filters when you know the category, color, or season.
+  </Card>
+  <Card title="Search by image" icon="image" href="/api/search-image">
+    Match against a reference image instead of a text query.
+  </Card>
+  <Card title="Try a garment on" icon="wand-magic-sparkles" href="/api/generation">
+    Pass a result `url` to `POST /try-on/generate` to render it on your user.
+  </Card>
+</CardGroup>

@@ -1,20 +1,129 @@
 ---
-title: "Introduction"
-description: "Welcome to your project"
+title: "Souldi"
+description: "Let your customers see how clothes look on them — powered by AI, embedded in minutes."
+mode: "wide"
 ---
 
-Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.
+Souldi brings AI-powered virtual try-on to your store. Your customers upload a photo
+once, then see realistic, AI-generated images of themselves wearing your garments —
+boosting buying confidence and cutting down on returns.
+
+## Explore Souldi
+
+One backend, several building blocks. Drop in the widget for the fastest path to
+live, build directly against the REST API for full control, use Catalog Search to
+surface the right garments, or read AI-estimated body measurements with Size
+Estimation — mix and match as your store needs.
+
+<CardGroup cols={2}>
+  <Card title="Widget" icon="bolt" href="/widget/overview">
+    A drop-in JavaScript snippet that ships the entire try-on flow. Live in minutes,
+    no backend work.
+  </Card>
+  <Card title="API Integration" icon="code" href="/api/overview">
+    Build your own UI and flow against the Souldi REST API for a fully custom,
+    branded experience.
+  </Card>
+  <Card title="Catalog Search" icon="magnifying-glass" href="/api/search">
+    Find garments in your catalog by text, attributes, or image — then feed them
+    into a try-on.
+  </Card>
+  <Card title="Size Estimation" icon="ruler" href="/api/sizes">
+    Read AI-estimated body measurements for a signed-in user to power size
+    recommendations and fit.
+  </Card>
+</CardGroup>
+
+---
+
+## Widget
+
+**The fastest route to live.** A drop-in script that handles authentication,
+uploads, generation, and the end-user UI for you — no backend work required.
+
+<CardGroup cols={2}>
+  <Card title="Widget Overview" icon="bolt" href="/widget/overview">
+    See what the widget does and how it embeds into your store.
+  </Card>
+  <Card title="Widget Quickstart" icon="rocket" href="/widget/quickstart">
+    Add the snippet to your store and run your first try-on.
+  </Card>
+</CardGroup>
+
+## API Integration
+
+**Full control.** Build your own UI and flow directly against the Souldi REST API.
+Every try-on follows the same simple flow — behind the scenes, Souldi keeps customer
+photos private and routes generation through secure infrastructure.
+
+<Steps>
+  <Step title="Customer clicks Try On">
+    A shopper taps the try-on button on your product page to get started.
+  </Step>
+  <Step title="Verifies their email">
+    They confirm their identity with a one-time code sent to their email — no
+    passwords to remember.
+  </Step>
+  <Step title="Uploads a photo">
+    The customer uploads a single base photo of themselves. They only need to do
+    this once.
+  </Step>
+  <Step title="AI generates the try-on">
+    Souldi's AI produces a realistic image of the customer wearing the selected
+    garment.
+  </Step>
+  <Step title="Result appears on the product page">
+    The finished try-on is displayed right where your customer is shopping.
+  </Step>
+</Steps>
 
 <Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
+  Returning customers skip straight to step 4 — their verified identity and base
+  photo are already on file, so generating a new try-on is a single click.
 </Tip>
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+<CardGroup cols={2}>
+  <Card title="API Overview" icon="plug" href="/api/overview">
+    The big picture — authentication and the end-to-end flow.
+  </Card>
+  <Card title="API Authentication" icon="key" href="/api/authentication">
+    Authenticate your requests and start building.
+  </Card>
+</CardGroup>
+
+## Catalog Search
+
+**Surface the right garment.** Before a shopper tries something on, you need to find
+the garment. Catalog Search queries your catalog three ways — free text, structured
+attributes, or a reference image — and hands back garment URLs you can feed straight
+into a try-on. It's authenticated with just your tenant key; no end-user session
+required.
+
+<CardGroup cols={3}>
+  <Card title="By text" icon="font" href="/api/search-text">
+    Natural-language queries like `red summer dress`, ranked by relevance.
+  </Card>
+  <Card title="By attributes" icon="filter" href="/api/search-attributes">
+    Exact filters — category, color, season, and more.
+  </Card>
+  <Card title="By image" icon="image" href="/api/search-image">
+    Pass a garment image URL to find visually similar items.
+  </Card>
+</CardGroup>
+
+## Size Estimation
+
+**Know their fit.** After a customer uploads their base photo, Souldi estimates
+their body measurements in the background — mass, height, chest, waist, and hips.
+Read them back to recommend a size, pre-select a fit, or display the customer's
+profile. Like the rest of the user-scoped API, it's authenticated with your tenant
+key plus the end-user's session.
+
+<CardGroup cols={2}>
+  <Card title="Size Estimation" icon="ruler" href="/api/sizes">
+    Fetch a signed-in user's estimated body measurements from `GET /user/sizes`.
+  </Card>
+  <Card title="User &amp; Image" icon="image" href="/api/user-image">
+    Upload the base photo that kicks off measurement estimation.
+  </Card>
+</CardGroup>

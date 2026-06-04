@@ -1,0 +1,445 @@
+---
+title: "Generate a Try-On"
+description: "Start an asynchronous virtual try-on job, track it to completion over SSE or polling, then display the generated image — the same flow the official Souldi widget runs."
+icon: "wand-magic-sparkles"
+---
+
+This is where it all comes together: you send Souldi one or more garment image
+URLs, and it returns a photorealistic image of your user wearing them. Generation
+is **asynchronous** — you create a job, wait for it to finish, then show the
+result.
+
+<Steps>
+  <Step title="Create a job">
+    `POST /try-on/generate` with the garment URL(s). You get back a `job_id` and a
+    `202 Accepted`.
+  </Step>
+  <Step title="Wait for it to finish">
+    Stream the job over SSE (preferred) or poll it until `status` is `completed`.
+  </Step>
+  <Step title="Display the result">
+    Read `generated_image_url` from the final event and show it to your user.
+  </Step>
+</Steps>
+
+## Before you start
+
+Every endpoint on this page requires **both** authentication headers, and the
+user must already have a usable base image.
+
+<CardGroup cols={2}>
+  <Card title="Headers on every request" icon="key">
+    Send your tenant key as **`x-api-key`** and the user's session token as
+    **`Authorization: Bearer <access_token>`**. See the
+    [API Overview](/api/overview#authentication-model).
+  </Card>
+  <Card title="A ready base image" icon="image">
+    The user must have a base image whose status is **not** `processing` or
+    `rejected`. Upload and confirm it first — see [User &amp; Image](/api/user-image).
+  </Card>
+</CardGroup>
+
+<Note>
+  Throughout this page, `BASE_URL` is your Souldi API base URL (for example
+  `https://api.yourdomain.com`).
+</Note>
+
+---
+
+## Create a job
+
+<ParamField path="POST /try-on/generate" />
+
+Creates an asynchronous try-on job. Returns **`202 Accepted`** immediately — the
+image is generated in the background.
+
+**Required headers**
+
+| Header | Value |
+| --- | --- |
+| `x-api-key` | Your publishable tenant key |
+| `Authorization` | `Bearer <access_token>` |
+| `Content-Type` | `application/json` |
+
+**Body parameters**
+
+<ParamField body="garment_image_urls" type="string[]" required>
+  One to three **public** garment image URLs. URLs must be unique. A single URL
+  runs one virtual try-on; two or three URLs compose multiple garments into one
+  job.
+</ParamField>
+
+<ParamField body="reference_job_id" type="string | null">
+  The `job_id` of a previous **completed** try-on to layer this garment onto
+  (sequential [outfit combinator](#outfit-combinator)). When set, only **one**
+  garment URL is allowed. Pass `null` for a fresh try-on.
+</ParamField>
+
+<ParamField body="base_image_variant" type="string | null">
+  Pass `"no_bg"` to run against the background-removed version of the user's base
+  image, or `null` to use the original.
+</ParamField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST "$BASE_URL/try-on/generate" \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "garment_image_urls": ["https://shop.example.com/tee.jpg"],
+    "reference_job_id": null,
+    "base_image_variant": null
+  }'
+```
+
+```javascript JavaScript
+const res = await fetch(`${BASE_URL}/try-on/generate`, {
+  method: "POST",
+  headers: {
+    "x-api-key": SOULDI_API_KEY,
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    garment_image_urls: ["https://shop.example.com/tee.jpg"],
+    reference_job_id: null,
+    base_image_variant: null,
+  }),
+});
+
+const { job_id, status } = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    f"{BASE_URL}/try-on/generate",
+    headers={
+        "x-api-key": SOULDI_API_KEY,
+        "Authorization": f"Bearer {access_token}",
+    },
+    json={
+        "garment_image_urls": ["https://shop.example.com/tee.jpg"],
+        "reference_job_id": None,
+        "base_image_variant": None,
+    },
+)
+job = res.json()
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 202 Accepted
+{
+  "job_id": "f3c8a1d2-7b44-4e91-9c0a-1e2d3f4a5b6c",
+  "status": "pending",
+  "generated_image_url": null
+}
+```
+
+</ResponseExample>
+
+**Response fields**
+
+<ResponseField name="job_id" type="string">
+  The identifier you'll use to stream or poll the job.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The job [status](#statuses). Starts as `pending`.
+</ResponseField>
+
+<ResponseField name="generated_image_url" type="string | null">
+  The result image URL once the job is `completed`. `null` until then.
+</ResponseField>
+
+### Behavior &amp; limits
+
+<AccordionGroup>
+  <Accordion title="Base image must be usable" icon="image">
+    The user must have a base image whose status is **not** `processing` (still
+    preprocessing) or `rejected` (unusable). Otherwise the request is rejected —
+    upload and confirm a photo first via [User &amp; Image](/api/user-image).
+  </Accordion>
+  <Accordion title="Duplicate garment URLs are rejected" icon="copy">
+    Every URL in `garment_image_urls` must be unique. Repeating a URL fails
+    validation.
+  </Accordion>
+  <Accordion title="Identical jobs are de-duplicated" icon="recycle">
+    If an identical job already exists (same garments, base image, and mode),
+    Souldi returns that existing job instead of creating a duplicate — so retrying
+    the same request is safe and won't burn extra generations.
+  </Accordion>
+  <Accordion title="Rate limit: 5 requests / 60s per user" icon="gauge-high">
+    Exceeding the limit returns **`429 Too Many Requests`**. Back off before
+    retrying.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  Garment URLs must be **publicly reachable** — Souldi fetches them server-side
+  during generation. URLs behind authentication or on private networks will fail.
+</Warning>
+
+---
+
+## Stream the job (SSE)
+
+<ParamField path="GET /try-on/{job_id}/stream" />
+
+Streams job status in real time over **Server-Sent Events**. This is the preferred
+way to await a result — you get updates the moment they happen, with no polling
+loop.
+
+**Required headers**
+
+| Header | Value |
+| --- | --- |
+| `x-api-key` | Your publishable tenant key |
+| `Authorization` | `Bearer <access_token>` |
+| `Accept` | `text/event-stream` |
+
+**Path parameter**
+
+<ParamField path="job_id" type="string" required>
+  The `job_id` returned by `POST /try-on/generate`.
+</ParamField>
+
+**How the stream behaves**
+
+- Each `data:` event is a JSON object: `{ "job_id", "status", "generated_image_url" }` — the same shape as the polling response.
+- A heartbeat comment (`:`) is sent about every **15 seconds** while the job is still running, to keep the connection alive.
+- When `status` becomes `completed`, `generated_image_url` is a **signed URL** to the result image. When `failed`, generation did not succeed.
+- The server closes the stream after a **120-second** timeout.
+- If the job is already terminal (`completed` or `failed`) when you connect, you receive a single event and the stream closes immediately.
+
+<RequestExample>
+
+```bash cURL
+curl -N "$BASE_URL/try-on/$JOB_ID/stream" \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Accept: text/event-stream"
+```
+
+```javascript fetch-event-source
+import { fetchEventSource } from "@microsoft/fetch-event-source";
+
+await fetchEventSource(`${BASE_URL}/try-on/${jobId}/stream`, {
+  headers: {
+    "x-api-key": SOULDI_API_KEY,
+    Authorization: `Bearer ${accessToken}`,
+    Accept: "text/event-stream",
+  },
+  openWhenHidden: true,
+  onmessage(ev) {
+    const job = JSON.parse(ev.data);
+    if (job.status === "completed") {
+      showResult(job.generated_image_url);
+    } else if (job.status === "failed") {
+      showError();
+    }
+  },
+  onerror(err) {
+    // Throw to stop, or return to let the library retry with backoff.
+    throw err;
+  },
+});
+```
+
+```javascript EventSource
+// EventSource can't set custom headers, so it suits same-origin proxies only.
+const es = new EventSource(`${BASE_URL}/try-on/${jobId}/stream`);
+es.onmessage = (ev) => {
+  const job = JSON.parse(ev.data);
+  if (job.status === "completed") {
+    showResult(job.generated_image_url);
+    es.close();
+  } else if (job.status === "failed") {
+    es.close();
+  }
+};
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```text Event stream
+: heartbeat
+
+data: {"job_id":"f3c8a1d2-...","status":"processing","generated_image_url":null}
+
+: heartbeat
+
+data: {"job_id":"f3c8a1d2-...","status":"completed","generated_image_url":"https://storage.souldi.../result.png?token=..."}
+```
+
+</ResponseExample>
+
+<Tip>
+  The official widget streams with
+  [`@microsoft/fetch-event-source`](https://www.npmjs.com/package/@microsoft/fetch-event-source)
+  — which lets it send the auth headers `EventSource` can't. It retries the
+  connection up to **3 times** with `1s / 2s / 4s` backoff, then falls back to
+  [polling](#poll-the-job) so a result is never lost to a flaky connection.
+</Tip>
+
+<Warning>
+  The signed `generated_image_url` is short-lived. Display or download it promptly
+  rather than caching the URL for later.
+</Warning>
+
+---
+
+## Poll the job
+
+<ParamField path="GET /try-on/{job_id}" />
+
+Returns the current job status. Use this as a fallback when you can't hold an SSE
+connection open (for example, a serverless function or a constrained client).
+
+**Required headers**
+
+| Header | Value |
+| --- | --- |
+| `x-api-key` | Your publishable tenant key |
+| `Authorization` | `Bearer <access_token>` |
+
+**Path parameter**
+
+<ParamField path="job_id" type="string" required>
+  The `job_id` returned by `POST /try-on/generate`.
+</ParamField>
+
+Poll on an interval until `status` is `completed` or `failed`.
+
+<RequestExample>
+
+```bash cURL
+curl "$BASE_URL/try-on/$JOB_ID" \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+```javascript JavaScript
+async function pollJob(jobId, { intervalMs = 3000, maxAttempts = 20 } = {}) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const res = await fetch(`${BASE_URL}/try-on/${jobId}`, {
+      headers: {
+        "x-api-key": SOULDI_API_KEY,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const job = await res.json();
+    if (job.status === "completed") return job.generated_image_url;
+    if (job.status === "failed") throw new Error("Generation failed");
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  throw new Error("Timed out waiting for the job");
+}
+```
+
+```python Python
+import time, requests
+
+def poll_job(job_id, interval=3, max_attempts=20):
+    for _ in range(max_attempts):
+        res = requests.get(
+            f"{BASE_URL}/try-on/{job_id}",
+            headers={
+                "x-api-key": SOULDI_API_KEY,
+                "Authorization": f"Bearer {access_token}",
+            },
+        )
+        job = res.json()
+        if job["status"] == "completed":
+            return job["generated_image_url"]
+        if job["status"] == "failed":
+            raise RuntimeError("Generation failed")
+        time.sleep(interval)
+    raise TimeoutError("Timed out waiting for the job")
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "job_id": "f3c8a1d2-7b44-4e91-9c0a-1e2d3f4a5b6c",
+  "status": "completed",
+  "generated_image_url": "https://storage.souldi.../result.png?token=..."
+}
+```
+
+</ResponseExample>
+
+<Note>
+  The official widget polls every **3 seconds** for up to roughly **20 attempts**
+  (about a minute) before giving up. Tune the interval and cap to fit your UX.
+</Note>
+
+---
+
+## Statuses
+
+Every stream event and poll response carries a `status`. The first two are
+transient; the last two are terminal.
+
+| Status | Meaning | What to do |
+| --- | --- | --- |
+| `pending` | Job accepted, queued, not started yet | Keep waiting |
+| `processing` | AI generation is running | Keep waiting |
+| `completed` | Success | Read `generated_image_url` and display it |
+| `failed` | Generation did not succeed | Surface an error; the user can retry |
+
+---
+
+## Outfit combinator
+
+Want to stack garments into a layered look — a shirt, then a jacket over it?
+Build the outfit **sequentially** by feeding each completed job into the next.
+
+<Steps>
+  <Step title="Generate the first garment">
+    `POST /try-on/generate` with the first garment URL and `reference_job_id: null`.
+  </Step>
+  <Step title="Wait for completed">
+    Stream or poll until that job's `status` is `completed`. Note its `job_id`.
+  </Step>
+  <Step title="Layer the next garment">
+    `POST /try-on/generate` again with the **next** garment URL and
+    `reference_job_id` set to the previous job's `job_id`. Remember: with a
+    `reference_job_id`, only **one** garment URL is allowed.
+  </Step>
+  <Step title="Repeat to keep stacking">
+    Each new job layers onto the one before it. Repeat for as many garments as you
+    want in the outfit.
+  </Step>
+</Steps>
+
+<Note>
+  This is exactly the mechanism the widget's `mode: 'oc'` (outfit combinator) uses
+  under the hood — chaining jobs via `reference_job_id` so each garment renders on
+  top of the previous result.
+</Note>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Review the full flow" icon="plug" href="/api/overview">
+    See how authentication, image upload, and generation fit together end to end.
+  </Card>
+  <Card title="Let the widget do it for you" icon="bolt" href="/widget/overview">
+    The official drop-in widget runs this entire flow — auth, upload, streaming,
+    and outfit combinator — out of the box.
+  </Card>
+</CardGroup>

@@ -1,0 +1,270 @@
+---
+title: "Customization"
+description: "Theme the @souldi/try-on widget to match your brand — dark and light modes, custom colors, fonts, and corners, all passed through a single theme object."
+icon: "palette"
+---
+
+The widget ships with a polished **dark theme** by default, and it also supports a
+light theme plus deep customization — colors, fonts, corners, and button outlines.
+Everything is configured through a single `theme` object passed to
+`VirtualTryOn.init()`. No CSS files, no overrides, no build step.
+
+<Note>
+  Every part of the widget's UI renders inside a **Shadow DOM**. That means theming
+  is fully isolated: your site's CSS never leaks into the widget, and the widget
+  never breaks your styles. You change the look exclusively through the `theme`
+  object.
+</Note>
+
+## How theming works
+
+Pass a `theme` object to `VirtualTryOn.init()`. All fields are optional — omit
+`theme` entirely and you get the default sage-green dark theme.
+
+```js
+VirtualTryOn.init({
+  apiBaseUrl: 'https://api.yourdomain.com',
+  tenantApiKey: 'pk_live_...',
+  theme: {
+    mode: 'dark',
+    accentColor: '#6366f1',
+  },
+});
+```
+
+## Theme modes
+
+The `mode` field switches the entire color palette. The default is `'dark'`.
+
+<CodeGroup>
+
+```js Dark (default)
+theme: { mode: 'dark' }
+```
+
+```js Light
+theme: { mode: 'light' }
+```
+
+</CodeGroup>
+
+<Info>
+  In **light mode**, surfaces become white and neutral, and the accent shifts to a
+  darker sage green (`#4d7c4b`) for stronger contrast against light backgrounds.
+  Shadows are also softened for a lighter feel.
+</Info>
+
+## Custom brand colors & fonts
+
+Override individual properties to match your brand. Here is a full `theme` object
+using every available option:
+
+```js
+VirtualTryOn.init({
+  apiBaseUrl: 'https://api.yourdomain.com',
+  tenantApiKey: 'pk_live_...',
+  theme: {
+    mode: 'dark',
+    accentColor: '#6366f1',
+    accentTextColor: '#ffffff',
+    borderRadius: '12px',
+    fontFamily: "'Inter', system-ui, sans-serif",
+    headingFontFamily: "'Playfair Display', serif",
+    buttonOutlineColor: '#6366f1',
+  },
+});
+```
+
+### Theme options
+
+All parameters are optional. Omit `theme` entirely to use the default dark
+appearance.
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `'dark'` \| `'light'` | `'dark'` | Switches the entire color palette between dark and light. |
+| `accentColor` | Hex color string | `#adcfab` | Primary accent color used for buttons, links, icons, and focus states. Hover and subtle variants are auto-derived. |
+| `accentTextColor` | Hex color string | Auto | Text color on accent-colored buttons. If omitted, it is automatically calculated for contrast (dark text on light accents, white text on dark accents). |
+| `borderRadius` | CSS pixel value | `12px` | Base border radius. All radii scale proportionally: `sm` (0.67×), `md` (1×), `lg` (1.33×), `xl` (1.67×). Pill shapes (fully rounded buttons) are not affected. |
+| `fontFamily` | CSS font stack | `'Manrope', system-ui, sans-serif` | Font used for body text, buttons, and inputs. |
+| `headingFontFamily` | CSS font stack | `'Newsreader', serif` | Font used for modal titles and headings. Headings use italic style by default. |
+| `buttonOutlineColor` | CSS color string | `transparent` | Adds a visible border around the split button. Useful for making the button stand out against matching backgrounds. |
+
+## Examples
+
+Mix and match the options below to match your store. Each tab is a drop-in `theme`
+object.
+
+<Tabs>
+
+<Tab title="Light mode">
+
+```js
+theme: { mode: 'light' }
+```
+
+Surfaces become white and neutral. The accent shifts to a darker green for contrast
+against light backgrounds, and shadows are softened.
+
+</Tab>
+
+<Tab title="Custom accent">
+
+```js
+theme: {
+  mode: 'dark',
+  accentColor: '#6366f1',
+}
+```
+
+The hover state and subtle tint are auto-derived from the accent. Button text
+automatically switches to white, since indigo is a dark color.
+
+</Tab>
+
+<Tab title="Custom fonts">
+
+```js
+theme: {
+  fontFamily: "'Inter', system-ui, sans-serif",
+  headingFontFamily: "'Playfair Display', serif",
+}
+```
+
+<Warning>
+  Load your custom fonts on the **host page**. The widget loads Manrope and
+  Newsreader from Google Fonts by default, but any other font you reference must
+  already be available in the page's font stack — the widget does not fetch it for
+  you.
+</Warning>
+
+</Tab>
+
+<Tab title="Button outline">
+
+```js
+theme: {
+  buttonOutlineColor: '#6366f1', // visible border around the split button
+}
+```
+
+Useful when the button background blends into the host page. Set it to any CSS
+color value; it defaults to `transparent` (no border).
+
+</Tab>
+
+<Tab title="Corners">
+
+```js
+theme: { borderRadius: '16px' } // rounder
+```
+
+```js
+theme: { borderRadius: '4px' }  // sharper
+```
+
+`borderRadius` sets the base radius; small, medium, large, and extra-large elements
+scale proportionally. Fully rounded pill shapes are unaffected.
+
+</Tab>
+
+<Tab title="Fully customized">
+
+```js
+theme: {
+  mode: 'light',
+  accentColor: '#e11d48',
+  borderRadius: '8px',
+  buttonOutlineColor: '#e7e5e4',
+  fontFamily: "'Inter', sans-serif",
+  headingFontFamily: "'DM Serif Display', serif",
+}
+```
+
+A complete brand match combining mode, accent, corners, outline, and both font
+stacks.
+
+</Tab>
+
+</Tabs>
+
+## Advanced: CSS variables
+
+<Note>
+  This section is optional. The `theme` object covers everything most merchants
+  need — reach for these variables only when inspecting or fine-tuning in dev tools.
+</Note>
+
+Internally, the widget maps your `theme` parameters to CSS custom properties defined
+on the Shadow DOM `:host` — for example `--vto-accent`, `--vto-bg-primary`,
+`--vto-radius-md`, and `--vto-font-sans`. You can inspect all of them in your
+browser's dev tools by selecting the widget's shadow root.
+
+<AccordionGroup>
+
+<Accordion title="Surfaces" icon="layer-group">
+
+| Property | Dark default | Light default | Description |
+| --- | --- | --- | --- |
+| `--vto-bg-primary` | `#1f201f` | `#ffffff` | Main card/modal background |
+| `--vto-bg-secondary` | `#1b1c1b` | `#f5f5f4` | Secondary panel background |
+| `--vto-bg-tertiary` | `#292a29` | `#e7e5e4` | Icon circles, recessed elements |
+| `--vto-bg-input` | `#121413` | `#fafaf9` | Input fields, preview areas |
+| `--vto-bg-overlay` | `rgba(0,0,0,0.55)` | `rgba(0,0,0,0.4)` | Backdrop overlay |
+
+</Accordion>
+
+<Accordion title="Text" icon="font">
+
+| Property | Dark default | Light default | Description |
+| --- | --- | --- | --- |
+| `--vto-text-primary` | `#e3e2e0` | `#1c1917` | Headings, body text |
+| `--vto-text-secondary` | `#c2c8bf` | `#57534e` | Descriptions, subtitles |
+| `--vto-text-muted` | `#8c928a` | `#a8a29e` | Labels, placeholders |
+| `--vto-text-on-accent` | `#193620` | `#ffffff` | Text on accent buttons |
+
+</Accordion>
+
+<Accordion title="Accent" icon="droplet">
+
+| Property | Dark default | Light default | Description |
+| --- | --- | --- | --- |
+| `--vto-accent` | `#adcfab` | `#4d7c4b` | Primary accent color |
+| `--vto-accent-hover` | `#c9ebca` | `#3d6b3b` | Accent hover state |
+| `--vto-accent-subtle` | `rgba(173,207,171,0.1)` | `rgba(77,124,75,0.08)` | Subtle accent tint |
+
+</Accordion>
+
+<Accordion title="Radii" icon="border-all">
+
+| Property | Default | Description |
+| --- | --- | --- |
+| `--vto-radius-sm` | `8px` | Small elements (inputs, error boxes) |
+| `--vto-radius-md` | `12px` | Medium elements (images, buttons, dropdowns) |
+| `--vto-radius-lg` | `16px` | Large elements (drop zones) |
+| `--vto-radius-xl` | `20px` | Modal cards |
+| `--vto-radius-pill` | `999px` | Fully rounded (action buttons, badges) |
+
+</Accordion>
+
+<Accordion title="Typography" icon="text-height">
+
+| Property | Default | Description |
+| --- | --- | --- |
+| `--vto-font-sans` | `'Manrope', system-ui, sans-serif` | Sans-serif font stack |
+| `--vto-font-serif` | `'Newsreader', serif` | Serif font stack (headings) |
+
+</Accordion>
+
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Widget Overview" icon="bolt" href="/widget/overview">
+    See everything the widget does and how it fits together.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/widget/quickstart">
+    Get the widget running and run your first try-on.
+  </Card>
+</CardGroup>

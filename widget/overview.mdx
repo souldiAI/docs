@@ -1,0 +1,110 @@
+---
+title: "Widget Overview"
+description: "Add AI virtual try-on to any store with the @souldi/try-on drop-in JavaScript widget — no backend work required."
+icon: "bolt"
+---
+
+The `@souldi/try-on` widget is a lightweight, drop-in JavaScript button that adds
+AI virtual try-on to any e-commerce site. It handles the entire end-user flow —
+login, photo upload, generation, and result display — and talks only to the Souldi
+API, never directly to any third-party service.
+
+<Note>
+  Because every request flows through the Souldi API, your customers' photos stay
+  private and your store never has to manage authentication, storage, or AI
+  infrastructure.
+</Note>
+
+## What the widget does
+
+<CardGroup cols={2}>
+  <Card title="Passwordless login" icon="envelope">
+    One-time-code email login (OTP) — no passwords. The session is remembered, so
+    returning customers skip straight to generating.
+  </Card>
+  <Card title="Photo upload" icon="image">
+    Customers upload a single base photo, which is automatically preprocessed
+    before generation.
+  </Card>
+  <Card title="AI try-on in seconds" icon="wand-magic-sparkles">
+    Generates a realistic image of the customer wearing your garment in just a few
+    seconds.
+  </Card>
+  <Card title="Live result swap" icon="arrows-rotate">
+    Optionally auto-replaces a product `<img>` on the page with the generated
+    try-on, right where the customer is shopping.
+  </Card>
+  <Card title="Outfit combinator" icon="layer-group">
+    Layer additional garments onto a previous try-on result to build a complete
+    look.
+  </Card>
+  <Card title="Full theming control" icon="palette">
+    Dark and light modes, custom colors, and fonts to match your brand — see the
+    [Customization](/widget/customization) page.
+  </Card>
+  <Card title="Shadow DOM isolation" icon="shield-halved">
+    The widget's UI is fully encapsulated. Your site's CSS never leaks in, and the
+    widget never breaks your styling.
+  </Card>
+  <Card title="Event callbacks" icon="bell">
+    React in your own UI with `onGenerationStart`, `onGenerationSuccess`,
+    `onError`, and `onLogout`.
+  </Card>
+</CardGroup>
+
+## Works anywhere
+
+The widget is framework-agnostic. It runs on **any** website — plain HTML, Shopify,
+WooCommerce, custom storefronts, React, Vue, and everything in between — because it
+ships as a standard script (a UMD global named `VirtualTryOn`) or an NPM ES module.
+
+<Check>
+  No build tooling is required for the script-tag route. Drop in one `<script>` tag
+  and you're ready to go.
+</Check>
+
+## Install it
+
+Pick whichever fits your stack. The CDN route is the fastest way to try it out; NPM
+is the best fit for build-tooling projects.
+
+<CodeGroup>
+
+```bash NPM
+npm install @souldi/try-on
+```
+
+```html CDN
+<script src="https://unpkg.com/@souldi/try-on/dist/widget.umd.js"></script>
+```
+
+</CodeGroup>
+
+The current published version is **0.1.12**.
+
+### Builds shipped
+
+| File | Format | Notes |
+| --- | --- | --- |
+| `dist/widget.umd.js` | UMD | Exposes a global named `VirtualTryOn`. Use this for the script-tag / CDN route. |
+| `dist/widget.mjs` | ES module | Import this when bundling with NPM and a build tool. |
+
+## Browser support
+
+| Browser | Minimum version |
+| --- | --- |
+| Chrome | 80+ |
+| Firefox | 78+ |
+| Safari | 14+ |
+| Edge | 80+ |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/widget/quickstart">
+    Get the widget running and run your first try-on.
+  </Card>
+  <Card title="Customization" icon="palette" href="/widget/customization">
+    Match your brand with custom colors, fonts, and themes.
+  </Card>
+</CardGroup>

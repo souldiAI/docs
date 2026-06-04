@@ -1,0 +1,251 @@
+---
+title: "Search by Attributes"
+description: "Filter your catalog by exact garment attributes — category, color, season, and more — for faceted browsing with no relevance ranking."
+icon: "filter"
+---
+
+When you already know *exactly* what you're looking for — red or blue hot-season
+dresses, say — attribute search filters your catalog by structured facets instead
+of guessing at relevance. It's an **exact filter**, so results carry no `z_score`.
+Each match is a garment `id` and `url` you can pass into
+[Generation](/api/generation).
+
+<Note>
+  This endpoint needs **only your tenant key** — send `x-api-key` and nothing else,
+  with no `Authorization: Bearer` token. `BASE_URL` is your Souldi API base URL.
+  See the [authentication model](/api/overview#authentication-model).
+</Note>
+
+## Search by attributes
+
+<ParamField path="POST /search/attribute-search" />
+
+Filters your catalog by exact garment attributes — no relevance ranking. Use it
+for faceted browsing ("show me red, hot-season dresses") or to pre-scope a catalog
+before a try-on.
+
+**Required headers**
+
+| Header | Value |
+| --- | --- |
+| `x-api-key` | Your publishable tenant key |
+| `Content-Type` | `application/json` |
+
+**How filters combine**
+
+- **Within** a single attribute, values are **OR**-ed — `color: ["red", "blue"]`
+  matches garments that are red *or* blue.
+- **Across** attributes, filters are **AND**-ed — adding `season: ["hot"]` keeps
+  only the red-or-blue garments that are *also* hot-season.
+
+So `{ "color": ["red", "blue"], "season": ["hot"] }` reads as *"(red OR blue) AND
+hot-season."*
+
+<Warning>
+  You must provide **at least one** attribute filter, or the request is rejected
+  with `422`. An empty body matches nothing by design.
+</Warning>
+
+**Body parameters**
+
+Every attribute is an optional array of allowed values. Each accepts a fixed set
+of values — an unrecognized value is rejected with `422`.
+
+<ParamField body="category" type="string[]">
+  Garment type, e.g. `dress`, `t-shirt`, `jacket`. See all values below.
+</ParamField>
+
+<ParamField body="color" type="string[]">
+  Dominant color, e.g. `red`, `black`, `multicolor`.
+</ParamField>
+
+<ParamField body="placement" type="string[]">
+  Where the garment sits on the body: `top-closed`, `top-open`, `bottom-long`,
+  `bottom-short`, `fullbody`.
+</ParamField>
+
+<ParamField body="gender" type="string[]">
+  `male` or `female`.
+</ParamField>
+
+<ParamField body="style" type="string[]">
+  Aesthetic, e.g. `casual`, `formal`, `streetwear`.
+</ParamField>
+
+<ParamField body="material" type="string[]">
+  Fabric, e.g. `cotton`, `denim`, `silk`.
+</ParamField>
+
+<ParamField body="season" type="string[]">
+  `hot`, `cold`, or `all_season`.
+</ParamField>
+
+<ParamField body="fit" type="string[]">
+  Silhouette, e.g. `slim-fitted`, `oversized-loose`.
+</ParamField>
+
+<ParamField body="pattern" type="string[]">
+  Surface pattern, e.g. `solid`, `striped`, `floral`.
+</ParamField>
+
+<ParamField body="occasion" type="string[]">
+  Intended occasion, e.g. `casual_everyday`, `formal_event`.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="20">
+  Maximum number of garments to return. Range `1`–`100`.
+</ParamField>
+
+**Allowed values**
+
+<AccordionGroup>
+  <Accordion title="category" icon="shirt">
+    **Tops** — `t-shirt`, `tank top`, `blouse`, `shirt`, `sweater`, `knitwear`,
+    `corset`, `blazer`, `hoodie`, `sweatshirt`, `crop top`, `bodysuit`
+
+    **Bottoms** — `trouser`, `jean`, `short`, `skirt`, `legging`, `tight`
+
+    **One-pieces** — `dress`, `jumpsuit`, `romper`, `overall`, `dungaree`, `suit`,
+    `set`
+
+    **Outerwear** — `coat`, `jacket`, `vest`, `gilet`, `cape`, `poncho`
+
+    **Intimates &amp; swimwear** — `swimwear`, `lingerie`, `loungewear`, `sleepwear`
+  </Accordion>
+  <Accordion title="color" icon="palette">
+    `black`, `white`, `grey`, `red`, `blue`, `green`, `yellow`, `pink`, `purple`,
+    `brown`, `beige`, `multicolor`
+  </Accordion>
+  <Accordion title="placement" icon="up-down">
+    `top-closed`, `top-open`, `bottom-long`, `bottom-short`, `fullbody`
+  </Accordion>
+  <Accordion title="gender" icon="venus-mars">
+    `male`, `female`
+  </Accordion>
+  <Accordion title="style" icon="wand-magic-sparkles">
+    `streetwear`, `casual`, `formal`, `boho`, `minimalist`, `vintage`, `sporty`,
+    `preppy`
+  </Accordion>
+  <Accordion title="material" icon="scroll">
+    `cotton`, `denim`, `leather`, `silk`, `wool`, `linen`, `synthetic`, `knit`,
+    `suede`
+  </Accordion>
+  <Accordion title="season" icon="sun">
+    `hot`, `cold`, `all_season`
+  </Accordion>
+  <Accordion title="fit" icon="ruler">
+    `oversized-loose`, `regular-standard`, `slim-fitted`, `cropped`, `maxi/long`
+  </Accordion>
+  <Accordion title="pattern" icon="grip">
+    `solid`, `striped`, `plaid/checkered`, `floral`, `animal-print`, `graphic`,
+    `tie-dye`, `abstract`
+  </Accordion>
+  <Accordion title="occasion" icon="champagne-glasses">
+    `casual_everyday`, `work_business`, `party_night_out`, `formal_event`,
+    `beach_vacation`, `active_sport`, `lounge_home`, `festival_concert`
+  </Accordion>
+</AccordionGroup>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST "$BASE_URL/search/attribute-search" \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": ["dress"],
+    "color": ["red", "blue"],
+    "season": ["hot"],
+    "limit": 10
+  }'
+```
+
+```javascript JavaScript
+const res = await fetch(`${BASE_URL}/search/attribute-search`, {
+  method: "POST",
+  headers: {
+    "x-api-key": SOULDI_API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    category: ["dress"],
+    color: ["red", "blue"],
+    season: ["hot"],
+    limit: 10,
+  }),
+});
+
+const { garments } = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.post(
+    f"{BASE_URL}/search/attribute-search",
+    headers={"x-api-key": SOULDI_API_KEY},
+    json={
+        "category": ["dress"],
+        "color": ["red", "blue"],
+        "season": ["hot"],
+        "limit": 10,
+    },
+)
+garments = res.json()["garments"]
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "garments": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "url": "https://shop.example.com/garments/red-linen-dress.jpg",
+      "z_score": null
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+**Response fields**
+
+<ResponseField name="garments" type="object[]">
+  The garments matching every filter. May be **empty** if nothing matches.
+</ResponseField>
+
+<ResponseField name="garments[].id" type="string">
+  The garment's unique ID.
+</ResponseField>
+
+<ResponseField name="garments[].url" type="string">
+  The garment image URL — ready to pass into
+  [`POST /try-on/generate`](/api/generation#create-a-job).
+</ResponseField>
+
+<ResponseField name="garments[].z_score" type="null">
+  Always `null` for attribute search — it's an exact filter, not a ranked search.
+</ResponseField>
+
+<Tip>
+  For the shared status codes and the empty-result case, see
+  [Errors](/api/search#errors).
+</Tip>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Search by text" icon="font" href="/api/search-text">
+    Use a natural-language query when you don't have exact facets in mind.
+  </Card>
+  <Card title="Search by image" icon="image" href="/api/search-image">
+    Match against a reference image instead of structured filters.
+  </Card>
+  <Card title="Try a garment on" icon="wand-magic-sparkles" href="/api/generation">
+    Pass a result `url` to `POST /try-on/generate` to render it on your user.
+  </Card>
+</CardGroup>

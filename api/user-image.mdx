@@ -1,0 +1,400 @@
+---
+title: "User Profile & Image"
+description: "Read the end-user's profile, upload a base photo, and wait for preprocessing — everything needed before generating a try-on."
+icon: "image"
+---
+
+Before a user can generate a try-on, they need a usable **base image**: a clear,
+full-body-ish photo that has finished preprocessing. This page walks through the
+whole sequence — checking the profile, uploading a photo, confirming it, waiting
+for it to become `ready`, and displaying it back to the user.
+
+<Info>
+  Every endpoint on this page is **user-scoped**. Each request needs both headers:
+
+  - **`x-api-key: <your_publishable_key>`** — identifies your store.
+  - **`Authorization: Bearer <access_token>`** — the signed-in user's session token from [Authentication](/api/authentication).
+
+  All requests and responses are JSON, with one exception: the **direct upload**
+  (step 3) is a `PUT` of raw binary bytes to a signed storage URL.
+</Info>
+
+## The upload sequence
+
+<Steps>
+  <Step title="Check the profile">
+    Call `GET /user/profile`. If `base_image_path` is `null`, the user has no
+    photo yet and you should prompt for one.
+  </Step>
+  <Step title="Request a signed upload URL">
+    Call `POST /user/profile/upload-url` with the file's content type and size.
+    You get back a short-lived `upload_url` and a storage `path`.
+  </Step>
+  <Step title="Upload the photo directly to storage">
+    `PUT` the raw image bytes to `upload_url`. This goes straight to storage —
+    it is **not** a call to the Souldi API.
+  </Step>
+  <Step title="Confirm the upload">
+    Call `PATCH /user/profile` with the `path` from step 2. This kicks off
+    background preprocessing and sets `base_image_status` to `processing`.
+  </Step>
+  <Step title="Poll until ready">
+    Poll `GET /user/profile` until `base_image_status` is `ready`. Only then is
+    the user ready to generate a try-on.
+  </Step>
+</Steps>
+
+---
+
+## GET `/user/profile`
+
+Fetch the authenticated user's profile and the status of their base image. Use
+this both to decide whether the user needs to upload a photo and to **poll**
+preprocessing status.
+
+**Required headers:** `x-api-key`, `Authorization: Bearer <access_token>`
+
+This endpoint takes no body and no parameters.
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.yourdomain.com/user/profile \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+```js fetch
+const res = await fetch("https://api.yourdomain.com/user/profile", {
+  headers: {
+    "x-api-key": SOULDI_API_KEY,
+    Authorization: `Bearer ${accessToken}`,
+  },
+});
+const profile = await res.json();
+```
+
+</CodeGroup>
+
+### Response fields
+
+<ResponseField name="id" type="string">
+  The user's UUID.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="base_image_path" type="string | null">
+  Storage path of the processed base image. `null` means the user hasn't
+  uploaded a usable photo yet.
+</ResponseField>
+
+<ResponseField name="base_image_status" type="string">
+  One of `processing`, `ready`, or `rejected`. Drives whether the user can
+  generate (see [Polling](#polling-wait-for-ready) below).
+</ResponseField>
+
+```json 200 OK
+{
+  "id": "9b1c0f2e-7a44-4c1e-9c2b-0f3a2d5e6f70",
+  "email": "shopper@example.com",
+  "base_image_path": "tenants/store_42/users/9b1c.../base.jpg",
+  "base_image_status": "ready"
+}
+```
+
+<Note>
+  The profile may also include optional **body-measurement** fields. These are
+  secondary — they're not required for the upload or generation flow, so you can
+  safely ignore them.
+</Note>
+
+---
+
+## POST `/user/profile/upload-url`
+
+Get a short-lived signed URL that lets you upload a photo **directly** to
+storage, keeping the file off the Souldi API path entirely.
+
+**Required headers:** `x-api-key`, `Authorization: Bearer <access_token>`
+
+### Body parameters
+
+| Name | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `content_type` | string | Yes | The image MIME type. Must be `image/jpeg` or `image/png`. |
+| `file_size_bytes` | integer | Yes | The file's size in bytes. Maximum **15 MB** (`15728640` bytes). |
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.yourdomain.com/user/profile/upload-url \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content_type": "image/jpeg",
+    "file_size_bytes": 482113
+  }'
+```
+
+```js fetch
+const res = await fetch(
+  "https://api.yourdomain.com/user/profile/upload-url",
+  {
+    method: "POST",
+    headers: {
+      "x-api-key": SOULDI_API_KEY,
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      content_type: file.type,
+      file_size_bytes: file.size,
+    }),
+  },
+);
+const { upload_url, path } = await res.json();
+```
+
+</CodeGroup>
+
+### Response fields
+
+<ResponseField name="upload_url" type="string">
+  A pre-signed URL. `PUT` your raw image bytes here (step 3). It expires quickly,
+  so upload right away.
+</ResponseField>
+
+<ResponseField name="path" type="string">
+  The storage path of the uploaded file. Pass this to `PATCH /user/profile` to
+  confirm the upload.
+</ResponseField>
+
+```json 200 OK
+{
+  "upload_url": "https://storage.example.com/upload/signed?token=...",
+  "path": "tenants/store_42/users/9b1c.../pending/base.jpg"
+}
+```
+
+---
+
+## PUT `{upload_url}`
+
+Upload the raw image bytes **directly to storage** using the `upload_url` from
+the previous step.
+
+<Warning>
+  This `PUT` targets the **signed storage URL** returned above — not a Souldi API
+  path. Do **not** send `x-api-key` or `Authorization` headers here; the signed
+  URL already authorizes the upload.
+</Warning>
+
+### Headers
+
+| Name | Value | Description |
+| --- | --- | --- |
+| `Content-Type` | `image/jpeg` or `image/png` | Must match the `content_type` you sent when requesting the upload URL. |
+
+The request body is the **raw binary file** (not JSON, not multipart).
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "$UPLOAD_URL" \
+  -H "Content-Type: image/jpeg" \
+  --data-binary @photo.jpg
+```
+
+```js fetch
+await fetch(upload_url, {
+  method: "PUT",
+  headers: { "Content-Type": file.type },
+  body: file,
+});
+```
+
+</CodeGroup>
+
+Storage returns a `200` or `201` on success with no JSON body to read. If the
+`PUT` fails, request a fresh `upload_url` and retry — signed URLs are
+short-lived.
+
+---
+
+## PATCH `/user/profile`
+
+Confirm the uploaded image and trigger preprocessing. This is what actually
+attaches the photo to the user's profile.
+
+**Required headers:** `x-api-key`, `Authorization: Bearer <access_token>`
+
+### Body parameters
+
+| Name | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `path` | string | Yes | The storage `path` returned by `POST /user/profile/upload-url`. |
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH https://api.yourdomain.com/user/profile \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "path": "tenants/store_42/users/9b1c.../pending/base.jpg" }'
+```
+
+```js fetch
+const res = await fetch("https://api.yourdomain.com/user/profile", {
+  method: "PATCH",
+  headers: {
+    "x-api-key": SOULDI_API_KEY,
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ path }),
+});
+const profile = await res.json();
+```
+
+</CodeGroup>
+
+The response is the updated profile, with `base_image_status` now `processing`.
+
+```json 200 OK
+{
+  "id": "9b1c0f2e-7a44-4c1e-9c2b-0f3a2d5e6f70",
+  "email": "shopper@example.com",
+  "base_image_path": "tenants/store_42/users/9b1c.../base.jpg",
+  "base_image_status": "processing"
+}
+```
+
+<Note>
+  Confirming kicks off **background preprocessing** — for example, removing the
+  background and preparing the model image used for generation. The status
+  becomes `ready` when it finishes, or `rejected` if the photo is unusable. You
+  can call `PATCH /user/profile` again later with a new `path` to **replace** the
+  photo.
+</Note>
+
+---
+
+## GET `/user/signed_user_image_url`
+
+Get a short-lived signed URL to **display** the user's stored image in the
+browser — for example, to show their current photo before they generate.
+
+**Required headers:** `x-api-key`, `Authorization: Bearer <access_token>`
+
+### Query parameters
+
+| Name | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `variant` | string | No | Pass `no_bg` for the background-removed version. Omit for the original base image. |
+
+<CodeGroup>
+
+```bash cURL
+# Original base image
+curl "https://api.yourdomain.com/user/signed_user_image_url" \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+
+# Background-removed variant
+curl "https://api.yourdomain.com/user/signed_user_image_url?variant=no_bg" \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+```js fetch
+const res = await fetch(
+  "https://api.yourdomain.com/user/signed_user_image_url",
+  {
+    headers: {
+      "x-api-key": SOULDI_API_KEY,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  },
+);
+const { url } = await res.json();
+imgEl.src = url; // short-lived — fetch fresh each time you display
+```
+
+</CodeGroup>
+
+### Response fields
+
+<ResponseField name="id" type="string">
+  The user's UUID.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  A temporary signed URL pointing at the requested image. It has a short expiry,
+  so request a fresh one each time you render rather than caching it.
+</ResponseField>
+
+```json 200 OK
+{
+  "id": "9b1c0f2e-7a44-4c1e-9c2b-0f3a2d5e6f70",
+  "url": "https://storage.example.com/render/signed?token=..."
+}
+```
+
+<Warning>
+  Requesting `variant=no_bg` before preprocessing has produced the
+  background-removed image returns **`404`**. Wait until `base_image_status` is
+  `ready` before requesting the `no_bg` variant.
+</Warning>
+
+---
+
+## Polling: wait for `ready`
+
+<Warning>
+  After `PATCH /user/profile`, **poll `GET /user/profile` until
+  `base_image_status` is `ready`** before attempting generation. A try-on
+  request is rejected while the image is still `processing`, and a `rejected`
+  status means the user must upload a **different** photo.
+</Warning>
+
+A simple polling loop, mirroring what the official widget does — it waits up to
+about **2 minutes**, checking every few seconds:
+
+```js Poll until ready
+async function waitForReady({ intervalMs = 3000, maxWaitMs = 120000 } = {}) {
+  const deadline = Date.now() + maxWaitMs;
+  while (Date.now() < deadline) {
+    const res = await fetch("https://api.yourdomain.com/user/profile", {
+      headers: {
+        "x-api-key": SOULDI_API_KEY,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const { base_image_status } = await res.json();
+
+    if (base_image_status === "ready") return true;
+    if (base_image_status === "rejected") {
+      throw new Error("Photo rejected — ask the user for a new one.");
+    }
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  throw new Error("Preprocessing timed out.");
+}
+```
+
+<Tip>
+  Surface a friendly "preparing your photo…" state to the user while you poll.
+  Most photos finish well within the window.
+</Tip>
+
+## Next steps
+
+<Card title="Generate a try-on" icon="wand-magic-sparkles" href="/api/generation">
+  Once `base_image_status` is `ready`, send garment URL(s) to start a try-on job
+  and track it to completion.
+</Card>

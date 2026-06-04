@@ -1,0 +1,174 @@
+---
+title: "Quickstart"
+description: "Add the Souldi virtual try-on widget to your store and run your first try-on in three steps."
+icon: "rocket"
+---
+
+The Souldi widget is a lightweight JavaScript snippet that adds an AI-powered "Try On"
+button to any product page. Souldi handles authentication, photo uploads, and
+generation behind the scenes — you just drop in the script and point it at a garment.
+
+This guide takes you from zero to a working try-on button in three steps.
+
+<Steps>
+  <Step title="Install the widget">
+    Add the widget to your store via npm or a CDN script tag.
+
+    <CodeGroup>
+      ```bash npm
+      npm install @souldi/try-on
+      ```
+
+      ```html CDN
+      <script src="https://unpkg.com/@souldi/try-on/dist/widget.umd.js"></script>
+      ```
+    </CodeGroup>
+
+    <Info>
+      The CDN (UMD) build exposes a global `VirtualTryOn` object on `window`. If you use a
+      bundler such as Vite or webpack, import the ESM build at `dist/widget.mjs` instead.
+    </Info>
+  </Step>
+
+  <Step title="Initialize the widget">
+    Call `VirtualTryOn.init(options)` **once per page load** to configure the widget with
+    your API endpoint and publishable key. Calling `init()` a second time is ignored.
+
+    ```html
+    <script>
+      VirtualTryOn.init({
+        apiBaseUrl: 'https://api.yourdomain.com',
+        tenantApiKey: 'pk_live_abc123',
+      });
+    </script>
+    ```
+
+    | Option | Type | Required | Description |
+    |--------|------|:--------:|-------------|
+    | `apiBaseUrl` | `string` | Yes | Your Souldi API endpoint URL. |
+    | `tenantApiKey` | `string` | Yes | Your publishable API key from the [Souldi dashboard](#). Safe to expose client-side — it's scoped to your whitelisted domains. |
+    | `theme` | `object` | No | Appearance customization. See [Customization](/widget/customization). |
+    | `onGenerationStart` | `function` | No | Called when AI generation begins. Signature: `()`. |
+    | `onGenerationSuccess` | `function` | No | Called when the try-on completes. Signature: `(resultUrl: string)`. |
+    | `onError` | `function` | No | Called on any error. Signature: `(message: string)`. |
+    | `onLogout` | `function` | No | Called after the user logs out. Signature: `()`. |
+
+    <Warning>
+      Use your **publishable** key (`pk_live_...`) here — never your secret key. The
+      publishable key is safe in client-side code because it only works from the domains
+      you've whitelisted in your dashboard.
+    </Warning>
+  </Step>
+
+  <Step title="Add a Try-On button">
+    Call `VirtualTryOn.createButton(options)` **once per product or garment**. The button
+    renders into a container element you provide.
+
+    ```html
+    <div id="try-on-btn"></div>
+
+    <script>
+      VirtualTryOn.createButton({
+        containerId: 'try-on-btn',
+        garmentUrl: 'https://your-cdn.com/images/jacket-flat.png',
+        targetImageId: 'product-image', // optional: auto-swaps this <img> with the result
+      });
+    </script>
+    ```
+
+    | Option | Type | Required | Description |
+    |--------|------|:--------:|-------------|
+    | `containerId` | `string` | Yes | ID of the DOM element where the button renders. |
+    | `garmentUrl` | `string` | Yes | Public URL of the garment image to try on. |
+    | `targetImageId` | `string` | No | ID of an `<img>` element to auto-swap with the generated try-on result. |
+    | `label` | `string` | No | Button text. Defaults to `"Try On"`. |
+    | `mode` | `string` | No | `"vto"` (default) for single-garment try-on, or `"oc"` for the outfit combinator. |
+
+    <Note>
+      In `"oc"` (outfit combinator) mode, the garment is layered onto the user's previous
+      completed try-on result — so the customer needs to have finished a try-on earlier in
+      the session before an outfit-combinator button can generate.
+    </Note>
+  </Step>
+</Steps>
+
+## Events and callbacks
+
+The four callbacks you pass to `init()` let you hook your own UI and analytics into the
+try-on lifecycle. The widget stays lightweight and lets your page own the experience.
+
+| Callback | Signature | Good for |
+|----------|-----------|----------|
+| `onGenerationStart` | `()` | Showing your own loading spinner or skeleton while the AI works. |
+| `onGenerationSuccess` | `(resultUrl: string)` | Storing the result, firing analytics, or rendering the image yourself. |
+| `onError` | `(message: string)` | Surfacing a toast or inline message when something goes wrong. |
+| `onLogout` | `()` | Resetting UI state after the customer signs out. |
+
+<Tip>
+  If you set `targetImageId`, the widget already swaps that `<img>` for you on success —
+  use `onGenerationSuccess` for everything else, like analytics or a "save to favorites"
+  action.
+</Tip>
+
+## Full example
+
+A complete, copy-paste product page with init, a button, and callbacks wired up:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Store</title>
+    <script src="https://unpkg.com/@souldi/try-on/dist/widget.umd.js"></script>
+  </head>
+  <body>
+    <div class="product-card">
+      <img id="product-image" src="/images/jacket.jpg" alt="Classic Denim Jacket" />
+      <h2>Classic Denim Jacket</h2>
+      <p>$89.00</p>
+
+      <!-- The try-on button renders here -->
+      <div id="try-on-btn"></div>
+    </div>
+
+    <script>
+      VirtualTryOn.init({
+        apiBaseUrl: 'https://api.yourdomain.com',
+        tenantApiKey: 'pk_live_abc123',
+        theme: {
+          mode: 'light',
+          accentColor: '#4d7c4b',
+        },
+        onGenerationSuccess: (resultUrl) => {
+          console.log('Try-on result:', resultUrl);
+        },
+        onError: (message) => {
+          console.error('Try-on error:', message);
+        },
+      });
+
+      VirtualTryOn.createButton({
+        containerId: 'try-on-btn',
+        garmentUrl: 'https://your-cdn.com/images/jacket-flat.png',
+        targetImageId: 'product-image',
+      });
+    </script>
+  </body>
+</html>
+```
+
+<Check>
+  That's it. When a customer clicks **Try On**, Souldi handles verification, the photo
+  upload, and AI generation — and the result appears right on your product page.
+</Check>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Customization" icon="palette" href="/widget/customization">
+    Match the widget to your brand with theme modes, accent colors, fonts, and more.
+  </Card>
+  <Card title="Widget Overview" icon="bolt" href="/widget/overview">
+    Learn how the widget works and how it keeps customer photos private.
+  </Card>
+</CardGroup>

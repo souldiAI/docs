@@ -1,0 +1,145 @@
+---
+title: "Size Estimation"
+description: "Read the signed-in user's body measurements — mass, height, chest, waist, and hips — to power size recommendations and fit guidance."
+icon: "ruler"
+---
+
+Once a user has uploaded a base photo, Souldi estimates their body measurements
+in the background. This endpoint reads those measurements back — `mass`,
+`height`, `chest`, `waist`, and `hips` — so you can recommend a size, pre-select a
+fit, or simply show the user their profile.
+
+<Info>
+  This endpoint is **user-scoped**. Each request needs both headers:
+
+  - **`x-api-key: <your_publishable_key>`** — identifies your store.
+  - **`Authorization: Bearer <access_token>`** — the signed-in user's session token from [Authentication](/api/authentication).
+
+  See the [authentication model](/api/overview#authentication-model).
+</Info>
+
+<Note>
+  Measurements are computed by an **asynchronous sizing pipeline** that runs after
+  the user uploads their base image (see [User &amp; Image](/api/user-image)). Until
+  it finishes, this endpoint returns a `200` with **every field `null`** — that's
+  the "not ready yet" state, not an error.
+</Note>
+
+## GET `/user/sizes`
+
+Fetch the authenticated user's body measurements. Use it to drive size
+recommendations, or to check whether sizing has finished by testing for non-`null`
+fields.
+
+**Required headers:** `x-api-key`, `Authorization: Bearer <access_token>`
+
+This endpoint takes no path parameters, query parameters, or body.
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.yourdomain.com/user/sizes \
+  -H "x-api-key: $SOULDI_API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+```js fetch
+const res = await fetch("https://api.yourdomain.com/user/sizes", {
+  headers: {
+    "x-api-key": SOULDI_API_KEY,
+    Authorization: `Bearer ${accessToken}`,
+  },
+});
+const sizes = await res.json();
+```
+
+```python Python
+import requests
+
+res = requests.get(
+    "https://api.yourdomain.com/user/sizes",
+    headers={
+        "x-api-key": SOULDI_API_KEY,
+        "Authorization": f"Bearer {access_token}",
+    },
+)
+sizes = res.json()
+```
+
+</CodeGroup>
+
+### Response fields
+
+All measurements use the **metric system** and are `null` until the sizing
+pipeline has produced a result.
+
+<ResponseField name="mass" type="number | null">
+  Estimated body mass in **kilograms (kg)**. `null` until measurements are ready.
+</ResponseField>
+
+<ResponseField name="height" type="number | null">
+  Estimated height in **centimeters (cm)**. `null` until measurements are ready.
+</ResponseField>
+
+<ResponseField name="chest" type="number | null">
+  Estimated chest circumference in **centimeters (cm)**. `null` until measurements
+  are ready.
+</ResponseField>
+
+<ResponseField name="waist" type="number | null">
+  Estimated waist circumference in **centimeters (cm)**. `null` until measurements
+  are ready.
+</ResponseField>
+
+<ResponseField name="hips" type="number | null">
+  Estimated hip circumference in **centimeters (cm)**. `null` until measurements
+  are ready.
+</ResponseField>
+
+```json 200 OK — measurements ready
+{
+  "mass": 68.5,
+  "height": 174.0,
+  "chest": 96.2,
+  "waist": 78.4,
+  "hips": 101.7
+}
+```
+
+```json 200 OK — not computed yet
+{
+  "mass": null,
+  "height": null,
+  "chest": null,
+  "waist": null,
+  "hips": null
+}
+```
+
+<Warning>
+  Always handle the all-`null` response. A `200` with `null` fields means the
+  sizing pipeline hasn't finished — don't treat it as an error or assume a value of
+  zero. Check that the fields you need are non-`null` before showing sizes to the
+  user, and re-fetch later if they aren't ready yet.
+</Warning>
+
+## Errors
+
+| Code | Meaning | What to do |
+| --- | --- | --- |
+| `200` | OK | Read the measurements. All fields may be `null` if sizing hasn't finished. |
+| `400` | Bad request | The user ID in the token isn't a valid UUID. Re-authenticate the user. |
+| `401` | Unauthorized | The `Authorization` token is missing, invalid, or expired, or the user is inactive — refresh or re-authenticate. |
+| `403` | Forbidden | The request origin isn't whitelisted for this API key. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="User &amp; Image" icon="image" href="/api/user-image">
+    Upload the base photo that kicks off the sizing pipeline, and poll the profile
+    until the image is `ready`.
+  </Card>
+  <Card title="Generate a try-on" icon="wand-magic-sparkles" href="/api/generation">
+    Send garment URLs to render a try-on on the user's base image.
+  </Card>
+</CardGroup>

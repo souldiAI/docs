@@ -1,72 +1,79 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "name": "Souldi",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
-  "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
-  },
   "favicon": "/favicon.svg",
-  "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
-  "navbar": {
-    "links": [
+  "colors": {
+    "primary": "#6F8F72",
+    "light": "#6F8F72",
+    "dark": "#6F8F72"
+  },
+  "background": {
+    "color": {
+      "light": "#FAF7ED",
+      "dark": "#1F201F"
+    }
+  },
+  "fonts": {
+    "family": "Manrope",
+    "heading": {
+      "family": "Newsreader"
+    }
+  },
+  "navigation": {
+    "groups": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "group": "Get Started",
+        "pages": [
+          "index"
+        ]
+      },
+      {
+        "group": "Try-On",
+        "pages": [
+          {
+            "group": "Widget",
+            "pages": [
+              "widget/overview",
+              "widget/quickstart",
+              "widget/customization"
+            ]
+          },
+          {
+            "group": "API Integration",
+            "pages": [
+              "api/overview",
+              "api/authentication",
+              "api/user-image",
+              "api/generation"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Catalog Search",
+        "pages": [
+          {
+            "group": "Search the Catalog",
+            "pages": [
+              "api/search",
+              "api/search-text",
+              "api/search-attributes",
+              "api/search-image"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Sizes",
+        "pages": [
+          "api/sizes"
+        ]
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
     ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
   }
 }

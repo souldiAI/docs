@@ -1,0 +1,114 @@
+---
+title: "Search the Catalog"
+description: "Find garments in your catalog by free text, structured attributes, or a reference image — then feed the matches straight into a try-on."
+icon: "magnifying-glass"
+---
+
+Before a shopper can try a garment on, you need a way to surface the right
+garments from your catalog. Search gives you three ways to do that: a natural
+free-text query, a structured attribute filter, or a reference image to match
+against. Every result comes back as a garment `id` and `url` you can drop into
+[Generation](/api/generation).
+
+<CardGroup cols={3}>
+  <Card title="By text" icon="font" href="/api/search-text">
+    Natural-language queries like `red summer dress`. Ranked by relevance.
+  </Card>
+  <Card title="By attributes" icon="filter" href="/api/search-attributes">
+    Exact filters — category, color, season, and more. Combine to narrow down.
+  </Card>
+  <Card title="By image" icon="image" href="/api/search-image">
+    Pass a garment image URL to find visually similar items in your catalog.
+  </Card>
+</CardGroup>
+
+## Before you start
+
+<Note>
+  Search needs **only your tenant key** — send `x-api-key` and nothing else. Unlike
+  [Generation](/api/generation) and [User &amp; Image](/api/user-image), there's
+  **no `Authorization: Bearer` token**: search runs against *your* catalog, not a
+  specific end-user. See the
+  [authentication model](/api/overview#authentication-model).
+</Note>
+
+<Note>
+  Throughout these pages, `BASE_URL` is your Souldi API base URL (for example
+  `https://api.yourdomain.com`), and search is scoped to **your** catalog —
+  the one tied to your `x-api-key`.
+</Note>
+
+## How relevance works
+
+Text and image search return a `z_score` on every garment — a **relative**
+relevance metric, not an absolute one. It measures how far a garment stands out
+above the *average* match for **this specific query**, in standard deviations.
+
+- A `z_score` of `2.0` means the garment is two standard deviations more relevant
+  than the typical candidate for your query — a strong, standout match.
+- A `z_score` near `0` means it's only about as relevant as average — a weak match.
+
+Because the score is normalized per query, you **can't** compare raw scores across
+different queries, and you shouldn't hard-code a "good score" threshold. Instead,
+tune results with three knobs on the request body:
+
+| Field | What it does |
+| --- | --- |
+| `min_z_score` | The relevance floor. Garments scoring below it are dropped, so a query with no standout match can legitimately return **fewer — or zero — results**. |
+| `pool_size` | How many candidates form the baseline the `z_score` is measured against. A larger pool gives a more stable, representative average. |
+| `top_n` | The maximum number of garments returned, after filtering and ranking. |
+
+<Tip>
+  Raise `min_z_score` for **precision** (fewer, tighter matches); lower it for
+  **recall** (more, looser matches). The defaults (`min_z_score: 1.0`,
+  `pool_size: 50`, `top_n: 3`) are a sensible starting point for surfacing a small
+  set of try-on candidates.
+</Tip>
+
+<Note>
+  [Attribute search](/api/search-attributes) is an **exact filter**, not a
+  relevance ranking — its results have no `z_score` (the field is `null`).
+</Note>
+
+## Pick a search mode
+
+<CardGroup cols={3}>
+  <Card title="Search by text" icon="font" href="/api/search-text">
+    `POST /search/text-search` — natural-language query, ranked by `z_score`.
+  </Card>
+  <Card title="Search by attributes" icon="filter" href="/api/search-attributes">
+    `POST /search/attribute-search` — exact faceted filters across ten attributes.
+  </Card>
+  <Card title="Search by image" icon="image" href="/api/search-image">
+    `POST /search/image-search` — visual similarity to a reference image URL.
+  </Card>
+</CardGroup>
+
+## Errors
+
+These status codes apply to all three search endpoints.
+
+| Code | Meaning | What to do |
+| --- | --- | --- |
+| `200` | OK | Read `garments`. An empty array is a valid result — nothing matched. |
+| `401` | Unauthorized | The `x-api-key` header is missing, invalid, or inactive. |
+| `403` | Forbidden | The request origin isn't whitelisted for this API key. |
+| `422` | Unprocessable | Validation failed — a missing `query`, no attribute filter, an unknown enum value, or a body field outside its allowed range. |
+
+<Note>
+  A successful search can legitimately return an **empty** `garments` array — for
+  text and image search when nothing clears `min_z_score`, and for attribute search
+  when no garment matches every filter. Handle the empty case in your UI.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Try a garment on" icon="wand-magic-sparkles" href="/api/generation">
+    Take a garment `url` from any search result and pass it to
+    `POST /try-on/generate` to render it on your user.
+  </Card>
+  <Card title="Review the full flow" icon="plug" href="/api/overview">
+    See how authentication, search, and generation fit together end to end.
+  </Card>
+</CardGroup>
