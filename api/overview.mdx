@@ -19,7 +19,7 @@ dive into the per-endpoint pages.
 
 ## Base URL & content type
 
-All requests go to your Souldi API base URL, for example:
+All requests go to the Souldi API base URL:
 
 ```text
 https://api.souldi.io
@@ -100,7 +100,7 @@ sequenceDiagram
     [Authentication](/api/authentication).
   </Step>
   <Step title="Ensure a base image">
-    Read the user's profile. If `base_image_path` is empty, upload a photo and wait
+    Read the user's profile. If `has_base_image` is `false`, upload a photo and wait
     until `base_image_status` is `ready` before generating. See
     [User &amp; Image](/api/user-image).
   </Step>

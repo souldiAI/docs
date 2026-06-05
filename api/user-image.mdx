@@ -23,7 +23,7 @@ for it to become `ready`, and displaying it back to the user.
 
 <Steps>
   <Step title="Check the profile">
-    Call `GET /user/profile`. If `base_image_path` is `null`, the user has no
+    Call `GET /user/profile`. If `has_base_image` is `false`, the user has no
     photo yet and you should prompt for one.
   </Step>
   <Step title="Request a signed upload URL">
@@ -86,9 +86,10 @@ const profile = await res.json();
   The user's email address.
 </ResponseField>
 
-<ResponseField name="base_image_path" type="string | null">
-  Storage path of the processed base image. `null` means the user hasn't
-  uploaded a usable photo yet.
+<ResponseField name="has_base_image" type="boolean">
+  `true` once the user has uploaded a base photo, `false` if they haven't
+  uploaded one yet. Pair it with `base_image_status` to know whether that photo
+  is usable.
 </ResponseField>
 
 <ResponseField name="base_image_status" type="string">
@@ -100,7 +101,7 @@ const profile = await res.json();
 {
   "id": "9b1c0f2e-7a44-4c1e-9c2b-0f3a2d5e6f70",
   "email": "shopper@example.com",
-  "base_image_path": "tenants/store_42/users/9b1c.../base.jpg",
+  "has_base_image": true,
   "base_image_status": "ready"
 }
 ```
@@ -269,7 +270,7 @@ The response is the updated profile, with `base_image_status` now `processing`.
 {
   "id": "9b1c0f2e-7a44-4c1e-9c2b-0f3a2d5e6f70",
   "email": "shopper@example.com",
-  "base_image_path": "tenants/store_42/users/9b1c.../base.jpg",
+  "has_base_image": true,
   "base_image_status": "processing"
 }
 ```
