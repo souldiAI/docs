@@ -1,0 +1,95 @@
+---
+title: "Documentation"
+description: "How Souldi: Virtual Try-On & Size works for fashion stores on Shopify: plans, the app, your storefront and privacy."
+icon: "book"
+---
+
+## What it is
+
+An AI virtual try-on for fashion stores on Shopify. Shoppers upload a photo and see themselves wearing your products, with a size recommendation and a button to add the size to the Cart. You decide which products offer it, and you review each one before it goes live.
+
+<Note>
+  Building your own store experience instead of using Shopify? See the [widget](/widget/overview) and [API](/api/overview) guides.
+</Note>
+
+## Plans and billing
+
+All billing is through Shopify's Managed App Pricing. Plans are chosen on Shopify's plan page and approved in Shopify's billing window. There is no other way to pay.
+
+| Plan | Price a month | Renders included | Extra renders | Trial |
+| --- | --- | --- | --- | --- |
+| Starter | $19.90 | None | $0.03 each, from the first | None |
+| Boutique | $100 | 6,500 | $0.03 each | 7 days |
+| Growth | $350 | 23,000 | $0.03 each | 7 days |
+| Flagship | $750 | 50,000 | $0.03 each | 7 days |
+
+- **Every plan has the same features.**
+- **A render is one try-on picture made for a shopper.** Preparing products and the try-on you review before accepting one are not renders.
+- **Usage is metered** through the Shopify usage meter and appears on your Shopify invoice.
+- **Starter is set up with a $100 monthly usage cap** in Shopify, so the most we expect you to pay in a month is $119.90 ($19.90 plus $100).
+- **Usage** is shown on **Home** and under **Settings → Plan and usage**, in renders.
+
+## The app
+
+### Home
+
+A setup checklist on a new store. Once products are live it shows what needs you (products waiting for review, back photos to confirm again) and this month's renders.
+
+### Try-on
+
+Where products are added, prepared, reviewed, taken live and switched off.
+
+- **Add products:** pick **Products**, **A collection** or **A product type**, then **Prepare**.
+- **Getting ready:** **Preparing**, **Waiting for your review**, **Couldn't be prepared**.
+- **Live:** accepted products. Tick one to **Switch off**.
+
+### Preparing a product
+
+Souldi sorts the product's photos (each colour's front and back, worn photos as references, the size guide), reads its size chart, and runs one automatic refinement for the whole product. The refinement's fix is shape-only: length, fastenings, neckline and pockets. It never changes colour or print.
+
+### Reviewing a product
+
+The review shows the photos picked, the size chart read and the try-on made on a Model. Choose **Accept and go live**, or reject it to see the other versions, **Refine try-on** or **Switch off**. For a product Souldi could not prepare, **Go live without preparation** is the deliberate way to put it live.
+
+A colour's back photo is chosen on the product's review; if a front photo later changes, the app asks you to confirm the back again.
+
+### Sizing
+
+Shoppers' size recommendations come from the product's size chart (body measurements or the garment's own) and the shopper's body data. Fill many charts at once with the **Size Sheet**: download, fill, upload.
+
+### Models
+
+The people Souldi renders your products on when you review them. Add your own Models with their photo, name and measurements (the person pictured must have agreed to it), or use Souldi's two Sample Models, marked as Souldi's. Mark one default per gender.
+
+### Settings
+
+Plan and usage, the button's label, your storefront's appearance (colour, corners, label case) so the widget follows your store, and the list of shoppers who used try-on.
+
+## On your storefront
+
+### The try-on button and window
+
+The Souldi block adds a try-on button to a product page. It opens a window with the result, the recommended size, **Add to cart** and **Edit my profile**. Every result is labelled **AI-generated**. Add to cart puts one line item in your store's own Cart, in the size the shopper chose.
+
+### Sign-in and photos
+
+Shoppers sign in with a code sent to their email and upload a photo once (or scan a QR code to upload from their phone). Their photo is checked and its background removed before use.
+
+### Outfit Combinator
+
+The Outfit Combinator is on request: ask Souldi to switch it on for your store. Once it is on, **Build an outfit** opens a page of your live products. Shoppers mix pieces into a look, pick a size for each, and add the whole look to the Cart in one step. The page is in English for now, whatever language the shopper uses elsewhere.
+
+### Languages
+
+Shoppers see their store's language, in English or Spanish, or English where there is none. The app follows each staff member's Shopify language, in English or Spanish.
+
+## Privacy
+
+- A shopper's photo and body data are private. They are not shared with the store.
+- The store sees the verified email of each shopper who used try-on, listed under **Settings** with the date it was first seen.
+- Images are stored in the EU.
+- Shoppers can view and delete their data, and delete their account, from their profile in the try-on window.
+
+## Support
+
+English and Spanish. See the [FAQ](/shopify/faq) first.
