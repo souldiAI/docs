@@ -33,6 +33,15 @@
         ]
       },
       {
+        "group": "Shopify App",
+        "pages": [
+          "shopify/tutorial",
+          "shopify/faq",
+          "shopify/documentation",
+          "shopify/changelog"
+        ]
+      },
+      {
         "group": "Try-On",
         "pages": [
           {
