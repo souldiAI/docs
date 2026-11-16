@@ -35,10 +35,19 @@
       {
         "group": "Shopify App",
         "pages": [
-          "shopify/tutorial",
-          "shopify/faq",
-          "shopify/documentation",
-          "shopify/changelog"
+          "app/tutorial",
+          "app/faq",
+          "app/documentation",
+          "app/changelog"
+        ]
+      },
+      {
+        "group": "App de Shopify (español)",
+        "pages": [
+          "app/es/tutorial",
+          "app/es/faq",
+          "app/es/documentation",
+          "app/es/changelog"
         ]
       },
       {
